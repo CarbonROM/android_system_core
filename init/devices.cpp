@@ -643,11 +643,6 @@ char** get_block_device_symlinks(struct uevent* uevent) {
         import_kernel_cmdline(false, get_bootdevice_from_cmdline);
     }
 
-    if (pdev && !boot_device.empty() && strstr(device, boot_device.c_str()) && !bootdevice_symlink_done) {
-        /* Create bootdevice symlink for platform boot stroage device */
-        bootdevice_symlink_done = make_link_init(link_path, "/dev/block/bootdevice");
-    }
-
     return links;
 }
 
