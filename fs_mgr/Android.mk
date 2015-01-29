@@ -26,9 +26,10 @@ LOCAL_C_INCLUDES := \
     system/vold \
     system/extras/ext4_utils \
     external/openssl/include \
-    bootable/recovery
+    bootable/recovery \
+    external/e2fsprogs/lib
 LOCAL_MODULE:= libfs_mgr
-LOCAL_STATIC_LIBRARIES := $(common_static_libraries)
+LOCAL_STATIC_LIBRARIES := $(common_static_libraries) libext2_blkid
 LOCAL_EXPORT_C_INCLUDE_DIRS := $(LOCAL_PATH)/include
 LOCAL_CFLAGS := -Werror
 ifneq (,$(filter userdebug,$(TARGET_BUILD_VARIANT)))
@@ -53,7 +54,9 @@ LOCAL_STATIC_LIBRARIES := libfs_mgr \
     libc \
     libsparse_static \
     libz \
-    libselinux
+    libselinux \
+    libext2_blkid
+
 LOCAL_CXX_STL := libc++_static
 LOCAL_CFLAGS := -Werror
 include $(BUILD_EXECUTABLE)
