@@ -120,6 +120,8 @@ LOCAL_STATIC_LIBRARIES := \
     libcrypto_utils \
     libcrypto \
     libc++_static \
+    libext2_blkid \
+    libext2_uuid \
     libdl \
     libsparse \
     libz \

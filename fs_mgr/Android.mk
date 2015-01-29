@@ -12,7 +12,9 @@ common_static_libraries := \
     libext4_utils \
     libsquashfs_utils \
     libselinux \
-    libavb
+    libavb \
+    libext2_blkid \
+	libext2_uuid
 
 include $(CLEAR_VARS)
 LOCAL_CLANG := true
@@ -30,9 +32,12 @@ LOCAL_SRC_FILES:= \
 LOCAL_C_INCLUDES := \
     $(LOCAL_PATH)/include \
     system/vold \
-    system/extras/ext4_utils
+    system/extras/ext4_utils \
+    external/e2fsprogs/lib
+
 LOCAL_MODULE:= libfs_mgr
 LOCAL_STATIC_LIBRARIES := $(common_static_libraries)
+LOCAL_C_INCLUDES += system/extras/ext4_utils system/extras/squashfs_utils external/e2fsprogs/lib
 LOCAL_EXPORT_C_INCLUDE_DIRS := $(LOCAL_PATH)/include
 LOCAL_CFLAGS := -Werror
 ifneq (,$(filter userdebug,$(TARGET_BUILD_VARIANT)))
