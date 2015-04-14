@@ -14,7 +14,7 @@ common_static_libraries := \
     libselinux \
     libavb \
     libext2_blkid \
-	libext2_uuid
+	libext2_uuid_static
 
 include $(CLEAR_VARS)
 LOCAL_CLANG := true
