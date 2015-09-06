@@ -181,6 +181,8 @@ void HealthdDraw::draw_battery(const animation* anim) {
   }
   draw_clock(anim);
   draw_percent(anim);
+
+  healthd_board_mode_charger_draw_battery(batt_prop);
 }
 
 void HealthdDraw::draw_unknown(GRSurface* surf_unknown) {
