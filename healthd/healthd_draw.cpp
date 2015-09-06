@@ -15,10 +15,11 @@
  */
 
 #include <android-base/stringprintf.h>
-#include <batteryservice/BatteryService.h>
 #include <cutils/klog.h>
 
 #include "healthd_draw.h"
+
+#include <healthd/healthd.h>
 
 #define LOGE(x...) KLOG_ERROR("charger", x);
 #define LOGV(x...) KLOG_DEBUG("charger", x);
@@ -181,6 +182,8 @@ void HealthdDraw::draw_battery(const animation* anim) {
   }
   draw_clock(anim);
   draw_percent(anim);
+
+  healthd_board_mode_charger_draw_battery(batt_prop);
 }
 
 void HealthdDraw::draw_unknown(GRSurface* surf_unknown) {

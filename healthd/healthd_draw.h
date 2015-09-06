@@ -19,10 +19,13 @@
 
 #include <linux/input.h>
 #include <minui/minui.h>
+#include <batteryservice/BatteryService.h>
 
 #include "animation.h"
 
 using namespace android;
+
+extern android::BatteryProperties* batt_prop;
 
 class HealthdDraw {
  public:
