@@ -3,7 +3,7 @@
 LOCAL_PATH := $(call my-dir)
 
 include $(CLEAR_VARS)
-LOCAL_SRC_FILES := healthd_board_default.cpp healthd_msm_alarm.cpp
+LOCAL_SRC_FILES := healthd_board_default.cpp
 LOCAL_MODULE := libhealthd.default
 LOCAL_CFLAGS := -Werror
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/include
@@ -16,6 +16,12 @@ LOCAL_MODULE := libbatterymonitor
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/include
 LOCAL_EXPORT_C_INCLUDE_DIRS := $(LOCAL_PATH)/include
 LOCAL_STATIC_LIBRARIES := libutils
+include $(BUILD_STATIC_LIBRARY)
+
+include $(CLEAR_VARS)
+LOCAL_SRC_FILES := healthd_board_msm.cpp
+LOCAL_MODULE := libhealthd.msm
+LOCAL_CFLAGS := -Werror
 include $(BUILD_STATIC_LIBRARY)
 
 include $(CLEAR_VARS)
@@ -50,7 +56,6 @@ LOCAL_STATIC_LIBRARIES := \
     libc \
 
 include $(BUILD_STATIC_LIBRARY)
-
 
 include $(CLEAR_VARS)
 
@@ -114,6 +119,10 @@ LOCAL_STATIC_LIBRARIES += libsuspend
 endif
 
 LOCAL_HAL_STATIC_LIBRARIES := libhealthd
+
+ifeq ($(BOARD_USES_QCOM_HARDWARE),true)
+BOARD_HAL_STATIC_LIBRARIES ?= libhealthd.msm
+endif
 
 # Symlink /charger to /sbin/healthd
 LOCAL_POST_INSTALL_CMD := $(hide) mkdir -p $(TARGET_ROOT_OUT) \
