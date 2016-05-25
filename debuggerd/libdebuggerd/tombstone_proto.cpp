@@ -642,6 +642,7 @@ void engrave_tombstone_proto(Tombstone* tombstone, unwindstack::Unwinder* unwind
   Tombstone result;
 
   result.set_arch(get_arch());
+  result.set_carbon_version(android::base::GetProperty("ro.carbon.version", "unknown"));
   result.set_build_fingerprint(android::base::GetProperty("ro.build.fingerprint", "unknown"));
   result.set_revision(android::base::GetProperty("ro.revision", "unknown"));
   result.set_timestamp(get_timestamp());
