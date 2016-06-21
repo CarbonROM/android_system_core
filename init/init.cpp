@@ -677,6 +677,9 @@ int main(int argc, char** argv) {
     if (bootmode == "charger" || charging_mode_booting() ||
             strcmp(battchg_pause, BOARD_CHARGING_CMDLINE_VALUE) == 0) {
         am.QueueEventTrigger("charger");
+    } else if (strncmp(bootmode.c_str(), "ffbm", 4) == 0) {
+        NOTICE("Booting into ffbm mode\n");
+        am.QueueEventTrigger("ffbm");
     } else {
         am.QueueEventTrigger("late-init");
     }
