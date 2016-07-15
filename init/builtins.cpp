@@ -586,6 +586,13 @@ static int mount_fstab(const char* fstabfile, int mount_mode) {
         /* fork failed, return an error */
         return -1;
     }
+
+    std::string bootmode = property_get("ro.bootmode");
+    if (strncmp(bootmode.c_str(), "ffbm", 4) == 0) {
+        NOTICE("ffbm mode, not start class main\n");
+        return 0;
+    }
+
     return ret;
 }
 
