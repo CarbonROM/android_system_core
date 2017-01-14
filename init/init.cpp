@@ -67,7 +67,6 @@
 #include "ueventd.h"
 #include "util.h"
 #include "watchdogd.h"
-#include "vendor_init.h"
 
 struct selabel_handle *sehandle;
 struct selabel_handle *sehandle_prop;
@@ -143,9 +142,6 @@ static void restart_processes()
 }
 
 void handle_control_message(const std::string& msg, const std::string& name) {
-    if (!vendor_handle_control_message(msg, name)) {
-        return;
-    }
     Service* svc = ServiceManager::GetInstance().FindServiceByName(name);
     if (svc == nullptr) {
         ERROR("no such service '%s'\n", name.c_str());
