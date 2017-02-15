@@ -610,6 +610,11 @@ static char **get_block_device_symlinks(struct uevent *uevent)
     else
         links[link_num] = NULL;
 
+    if (pdev && !boot_device.empty() && strstr(device, boot_device.c_str())) {
+        /* Create bootdevice symlink for platform boot stroage device */
+        make_link_init(link_path, "/dev/block/bootdevice");
+    }
+
     return links;
 }
 
