@@ -52,8 +52,8 @@ class BatteryMonitor {
     struct healthd_config *mHealthdConfig;
     Vector<String8> mChargerNames;
     bool mBatteryDevicePresent;
-    bool mDockBatteryDevicePresent;
     bool mAlwaysPluggedDevice;
+    bool mDockBatteryDevicePresent;
     int mBatteryFixedCapacity;
     int mBatteryFixedTemperature;
     struct BatteryProperties props;

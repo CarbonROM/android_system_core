@@ -63,10 +63,13 @@ static void initBatteryProperties(BatteryProperties* props) {
     props->chargerAcOnline = false;
     props->chargerUsbOnline = false;
     props->chargerWirelessOnline = false;
+    props->chargerDockAcOnline = false;
     props->maxChargingCurrent = 0;
     props->maxChargingVoltage = 0;
     props->batteryStatus = BATTERY_STATUS_UNKNOWN;
     props->batteryHealth = BATTERY_HEALTH_UNKNOWN;
+    props->dockBatteryStatus = BATTERY_STATUS_UNKNOWN;
+    props->dockBatteryHealth = BATTERY_HEALTH_UNKNOWN;
     props->batteryPresent = false;
     props->batteryLevel = 0;
     props->batteryVoltage = 0;
@@ -75,9 +78,6 @@ static void initBatteryProperties(BatteryProperties* props) {
     props->batteryCycleCount = 0;
     props->batteryFullCharge = 0;
     props->batteryChargeCounter = 0;
-    props->chargerDockAcOnline = false;
-    props->dockBatteryStatus = BATTERY_STATUS_UNKNOWN;
-    props->dockBatteryHealth = BATTERY_HEALTH_UNKNOWN;
     props->batteryTechnology.clear();
 }
 
@@ -167,18 +167,16 @@ BatteryMonitor::PowerSupplyType BatteryMonitor::readPowerSupplyType(const String
             { "USB_HVDCP", ANDROID_POWER_SUPPLY_TYPE_AC },
             { "USB_CDP", ANDROID_POWER_SUPPLY_TYPE_AC },
             { "USB_ACA", ANDROID_POWER_SUPPLY_TYPE_AC },
-            { "USB_HVDCP", ANDROID_POWER_SUPPLY_TYPE_AC },
-            { "USB_HVDCP_3", ANDROID_POWER_SUPPLY_TYPE_AC },
             { "USB_C", ANDROID_POWER_SUPPLY_TYPE_AC },
             { "USB_PD", ANDROID_POWER_SUPPLY_TYPE_AC },
             { "USB_PD_DRP", ANDROID_POWER_SUPPLY_TYPE_USB },
             { "USB_HVDCP", ANDROID_POWER_SUPPLY_TYPE_AC },
             { "USB_HVDCP_3", ANDROID_POWER_SUPPLY_TYPE_AC },
             { "Wireless", ANDROID_POWER_SUPPLY_TYPE_WIRELESS },
+            { "Wipower", ANDROID_POWER_SUPPLY_TYPE_WIRELESS },
+            { "DASH", ANDROID_POWER_SUPPLY_TYPE_AC },
             { "DockBattery", ANDROID_POWER_SUPPLY_TYPE_DOCK_BATTERY },
             { "DockAC", ANDROID_POWER_SUPPLY_TYPE_DOCK_AC },
-            { "DASH", ANDROID_POWER_SUPPLY_TYPE_AC },
-            { "Wipower", ANDROID_POWER_SUPPLY_TYPE_WIRELESS },
             { NULL, 0 },
     };
 
@@ -318,10 +316,10 @@ bool BatteryMonitor::update(void) {
             path.clear();
             path.appendFormat("%s/%s/type", POWER_SUPPLY_SYSFS_PATH, name);
             switch(readPowerSupplyType(path)) {
-            case ANDROID_POWER_SUPPLY_TYPE_AC:
-            case ANDROID_POWER_SUPPLY_TYPE_USB:
-            case ANDROID_POWER_SUPPLY_TYPE_WIRELESS:
-                // Check if any of them is online
+            case ANDROID_POWER_SUPPLY_TYPE_BATTERY:
+            case ANDROID_POWER_SUPPLY_TYPE_DOCK_BATTERY:
+                break;
+            default:
                 path.clear();
                 path.appendFormat("%s/%s/online", POWER_SUPPLY_SYSFS_PATH, name);
                 if (access(path.string(), R_OK) == 0) {
@@ -345,7 +343,6 @@ bool BatteryMonitor::update(void) {
                                 if (mHealthdConfig->dockBatterySupported) {
                                     props.chargerDockAcOnline = true;
                                 }
-                                break;
                             default:
                                 KLOG_WARNING(LOG_TAG, "%s: Unknown power supply type\n",
                                              name);
@@ -376,10 +373,6 @@ bool BatteryMonitor::update(void) {
                         }
                     }
                 }
-                break;
-            case ANDROID_POWER_SUPPLY_TYPE_BATTERY:
-                break;
-            default:
                 break;
             } //switch
         } //while
@@ -603,10 +596,10 @@ void BatteryMonitor::dumpState(int fd) {
     int v;
     char vs[128];
 
-    snprintf(vs, sizeof(vs), "ac: %d usb: %d wireless: %d current_max: %d voltage_max: %d dock-ac: %d\n",
+    snprintf(vs, sizeof(vs), "ac: %d usb: %d wireless: %d dock-ac: %d current_max: %d voltage_max: %d\n",
              props.chargerAcOnline, props.chargerUsbOnline,
-             props.chargerWirelessOnline, props.maxChargingCurrent,
-             props.maxChargingVoltage, props.chargerDockAcOnline);
+             props.chargerWirelessOnline, props.chargerDockAcOnline,
+             props.maxChargingCurrent, props.maxChargingVoltage);
     write(fd, vs, strlen(vs));
     snprintf(vs, sizeof(vs), "status: %d health: %d present: %d\n",
              props.batteryStatus, props.batteryHealth, props.batteryPresent);
@@ -962,6 +955,7 @@ void BatteryMonitor::init(struct healthd_config *hc) {
             KLOG_WARNING(LOG_TAG, "BatteryFullChargePath not found\n");
         if (mHealthdConfig->batteryCycleCountPath.isEmpty())
             KLOG_WARNING(LOG_TAG, "BatteryCycleCountPath not found\n");
+
         if (mHealthdConfig->dockBatterySupported) {
             if (mHealthdConfig->dockBatteryStatusPath.isEmpty())
                 KLOG_WARNING(LOG_TAG, "DockBatteryStatusPath not found\n");
