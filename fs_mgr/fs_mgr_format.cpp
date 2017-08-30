@@ -86,7 +86,7 @@ static int format_ext4(char *fs_blkdev, char *fs_mnt_point, bool crypt_footer)
 
 static int format_f2fs(char *fs_blkdev, long long fs_length)
 {
-    char * args[5];
+    const char * args[5];
     int pid;
     int rc = 0;
     char buff[65];
