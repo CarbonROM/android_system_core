@@ -100,7 +100,7 @@ static int format_f2fs(char *fs_blkdev, long long fs_length)
         args[3] = (char *)0;
     } else if (fs_length < 0) {
         snprintf(buff, sizeof(buff), "%lld", -fs_length);
-        args[1] = "-r";
+        args[1] = (char *)"-r";
         args[2] = buff;
         args[3] = fs_blkdev;
         args[4] = (char *)0;
