@@ -84,6 +84,7 @@ struct fstab_rec {
     unsigned int file_names_mode;
     unsigned int erase_blk_size;
     unsigned int logical_blk_size;
+    unsigned int zram_streams;
 };
 
 // Callback function for verity status

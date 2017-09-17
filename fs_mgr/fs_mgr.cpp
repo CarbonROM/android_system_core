@@ -1197,6 +1197,14 @@ int fs_mgr_swapon_all(struct fstab *fstab)
             FILE *zram_fp;
             FILE *zram_mcs_fp;
 
+            /* The stream count parameter is only available on new kernels.
+             * It must be set before the disk size. */
+            zram_fp = fopen(ZRAM_STREAMS, "r+");
+            if (zram_fp) {
+                fprintf(zram_fp, "%d\n", fstab->recs[i].zram_streams);
+                fclose(zram_fp);
+            }
+
             if (fstab->recs[i].max_comp_streams >= 0) {
                zram_mcs_fp = fopen(ZRAM_CONF_MCS, "r+");
               if (zram_mcs_fp == NULL) {
