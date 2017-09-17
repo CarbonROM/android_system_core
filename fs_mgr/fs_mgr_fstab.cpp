@@ -38,6 +38,7 @@ struct fs_mgr_flag_values {
     int swap_prio;
     int max_comp_streams;
     unsigned int zram_size;
+    unsigned int zram_streams;
     uint64_t reserved_size;
     unsigned int file_contents_mode;
     unsigned int file_names_mode;
@@ -96,6 +97,7 @@ static struct flag_list fs_mgr_flags[] = {
     { "quota",              MF_QUOTA },
     { "eraseblk=",          MF_ERASEBLKSIZE },
     { "logicalblk=",        MF_LOGICALBLKSIZE },
+    { "zramstreams=",MF_ZRAMSTREAMS },
     { "defaults",           0 },
     { 0,                    0 },
 };
@@ -205,6 +207,7 @@ static int parse_flags(char *flags, struct flag_list *fl,
         memset(flag_vals, 0, sizeof(*flag_vals));
         flag_vals->partnum = -1;
         flag_vals->swap_prio = -1; /* negative means it wasn't specified. */
+        flag_vals->zram_streams = 1;
     }
 
     /* initialize fs_options to the null string */
@@ -307,6 +310,8 @@ static int parse_flags(char *flags, struct flag_list *fl,
                         flag_vals->zram_size = calculate_zram_size(val);
                     else
                         flag_vals->zram_size = val;
+                } else if ((fl[i].flag == MF_ZRAMSTREAMS) && flag_vals) {
+                    flag_vals->zram_streams = strtoll(strchr(p, '=') + 1, NULL, 0);
                 } else if ((fl[i].flag == MF_RESERVEDSIZE) && flag_vals) {
                     /* The reserved flag is followed by an = and the
                      * reserved size of the partition.  Get it and return it.
@@ -578,6 +583,7 @@ static struct fstab *fs_mgr_read_fstab_file(FILE *fstab_file)
         fstab->recs[cnt].file_names_mode = flag_vals.file_names_mode;
         fstab->recs[cnt].erase_blk_size = flag_vals.erase_blk_size;
         fstab->recs[cnt].logical_blk_size = flag_vals.logical_blk_size;
+        fstab->recs[cnt].zram_streams = flag_vals.zram_streams;
         cnt++;
     }
     /* If an A/B partition, modify block device to be the real block device */
