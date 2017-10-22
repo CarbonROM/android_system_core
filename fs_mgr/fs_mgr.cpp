@@ -704,7 +704,8 @@ static bool needs_block_encryption(const struct fstab_rec* rec)
 {
     if (device_is_force_encrypted() && fs_mgr_is_encryptable(rec)) return true;
     if (rec->fs_mgr_flags & MF_FORCECRYPT) return true;
-    if (rec->fs_mgr_flags & MF_CRYPT) {
+    if (rec->fs_mgr_flags & MF_CRYPT ||
+            rec->autocrypt_mode == AUTOCRYPT_MODE_FDE) {
         /* Check for existence of convert_fde breadcrumb file */
         char convert_fde_name[PATH_MAX];
         snprintf(convert_fde_name, sizeof(convert_fde_name),
@@ -746,7 +747,8 @@ static int handle_encryptable(const struct fstab_rec* rec)
             PERROR << "Could not umount " << rec->mount_point << " - fail since can't encrypt";
             return FS_MGR_MNTALL_FAIL;
         }
-    } else if (rec->fs_mgr_flags & (MF_FILEENCRYPTION | MF_FORCEFDEORFBE)) {
+    } else if ((rec->fs_mgr_flags & (MF_FILEENCRYPTION | MF_FORCEFDEORFBE)) ||
+                rec->autocrypt_mode == AUTOCRYPT_MODE_FBE) {
         LINFO << rec->mount_point << " is file encrypted";
         return FS_MGR_MNTALL_DEV_FILE_ENCRYPTED;
     } else if (fs_mgr_is_encryptable(rec)) {
@@ -1266,10 +1268,23 @@ struct fstab_rec const* fs_mgr_get_crypt_entry(struct fstab const* fstab) {
     /* Look for the encryptable partition to find the data */
     for (i = 0; i < fstab->num_entries; i++) {
         /* Don't deal with vold managed enryptable partitions here */
-        if (!(fstab->recs[i].fs_mgr_flags & MF_VOLDMANAGED) &&
-            (fstab->recs[i].fs_mgr_flags &
-             (MF_CRYPT | MF_FORCECRYPT | MF_FORCEFDEORFBE | MF_FILEENCRYPTION))) {
-            return &fstab->recs[i];
+        if (fstab->recs[i].fs_mgr_flags & MF_VOLDMANAGED) {
+            continue;
+        }
+
+        if (fstab->recs[i].autocrypt_mode == AUTOCRYPT_MODE_FDE) {
+            if (!key_loc) {
+                key_loc = (char*) malloc(7);
+            }
+            strlcpy(key_loc, "footer", size);
+            strlcpy(real_blk_device, fstab->recs[i].blk_device, size);
+            break;
+        }
+
+        if (!((fstab->recs[i].fs_mgr_flags
+              & (MF_CRYPT | MF_FORCECRYPT | MF_FORCEFDEORFBE)) ||
+              fstab->recs[i].autocrypt_mode == AUTOCRYPT_MODE_FDE)) {
+            continue;
         }
     }
     return NULL;

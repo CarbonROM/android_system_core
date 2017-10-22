@@ -98,6 +98,7 @@ static struct flag_list fs_mgr_flags[] = {
     {"quota", MF_QUOTA},
     {"eraseblk=", MF_ERASEBLKSIZE},
     {"logicalblk=", MF_LOGICALBLKSIZE},
+    { "autodetectcrypt", MF_AUTODETECTCRYPT },
     {"defaults", 0},
     {0, 0},
 };
@@ -194,7 +195,8 @@ static bool read_dt_file(const std::string& file_name, std::string* dt_value)
 
 static int parse_flags(char *flags, struct flag_list *fl,
                        struct fs_mgr_flag_values *flag_vals,
-                       char *fs_options, int fs_options_len)
+                       char *fs_options, int fs_options_len,
+                       struct fstab_rec *rec, int *autocrypt_mode)
 {
     int f = 0;
     int i;
@@ -335,6 +337,43 @@ static int parse_flags(char *flags, struct flag_list *fl,
                     unsigned int val = strtoul(strchr(p, '=') + 1, NULL, 0);
                     if (val >= 4096 && (val & (val - 1)) == 0)
                         flag_vals->logical_blk_size = val;
+                } else if ((fl[i].flag == MF_AUTODETECTCRYPT) && flag_vals) {
+                    /* This flag tells us to automatically detect whether
+                     * we have FBE or FDE. We assume the offset from the end is 16384.
+                     */
+                    FILE* partition = fopen(rec->blk_device, "rb");
+                    if (!partition) {
+                        LERROR << "Could not open block device";
+                        continue;
+                    }
+                    fseek(partition, -16384, SEEK_END);
+                    char magic[5];
+                    magic[4] = '\0';
+                    fread(magic, 4, 1, partition);
+                    fclose(partition);
+                    char expected_magic[] = "\xD0\xB5\xB1\xC4";
+                    bool magic_matches = true;
+                    for (unsigned long i = 0; i < sizeof(expected_magic); i++) {
+                        if (magic[i] == expected_magic[i] ||
+                            magic[sizeof(expected_magic) - 2 - i] == expected_magic[i]) {
+                        } else {
+                            magic_matches = false;
+                        }
+                    }
+                    // "\xD0\xB5\xB1\xC4"
+                    if (magic_matches) {
+                        // FDE
+                        flag_vals->key_loc = NULL;
+                        flag_vals->part_length = -16384;
+                        *autocrypt_mode = AUTOCRYPT_MODE_FDE;
+                    } else {
+                        // FBE
+                        flag_vals->file_contents_mode =
+                            encryption_mode_to_flag(file_contents_encryption_modes,
+                                                    "ice", "file contents");
+                        flag_vals->file_names_mode = EM_AES_256_CTS;
+                        *autocrypt_mode = AUTOCRYPT_MODE_FBE;
+                    }
                 }
                 break;
             }
@@ -548,9 +587,11 @@ static struct fstab *fs_mgr_read_fstab_file(FILE *fstab_file)
             goto err;
         }
         tmp_fs_options[0] = '\0';
+        int autocrypt_mode_default = -1;
+        int *autocrypt_mode = &autocrypt_mode_default;
         fstab->recs[cnt].flags = parse_flags(p, mount_flags, NULL,
-                                       tmp_fs_options, FS_OPTIONS_LEN);
-
+                                       tmp_fs_options, FS_OPTIONS_LEN,
+                                       &fstab->recs[cnt], autocrypt_mode);
         /* fs_options are optional */
         if (tmp_fs_options[0]) {
             fstab->recs[cnt].fs_options = strdup(tmp_fs_options);
@@ -563,7 +604,9 @@ static struct fstab *fs_mgr_read_fstab_file(FILE *fstab_file)
             goto err;
         }
         fstab->recs[cnt].fs_mgr_flags = parse_flags(p, fs_mgr_flags,
-                                                    &flag_vals, NULL, 0);
+                                                    &flag_vals, NULL, 0,
+                                                    &fstab->recs[cnt],
+                                                    autocrypt_mode);
         fstab->recs[cnt].key_loc = flag_vals.key_loc;
         fstab->recs[cnt].key_dir = flag_vals.key_dir;
         fstab->recs[cnt].verity_loc = flag_vals.verity_loc;
@@ -578,6 +621,7 @@ static struct fstab *fs_mgr_read_fstab_file(FILE *fstab_file)
         fstab->recs[cnt].file_names_mode = flag_vals.file_names_mode;
         fstab->recs[cnt].erase_blk_size = flag_vals.erase_blk_size;
         fstab->recs[cnt].logical_blk_size = flag_vals.logical_blk_size;
+        fstab->recs[cnt].autocrypt_mode = *autocrypt_mode;
         cnt++;
     }
     /* If an A/B partition, modify block device to be the real block device */
@@ -760,6 +804,7 @@ int fs_mgr_add_entry(struct fstab *fstab,
      new_fstab_recs[n].fs_type = strdup(fs_type);
      new_fstab_recs[n].blk_device = strdup(blk_device);
      new_fstab_recs[n].length = 0;
+     new_fstab_recs[n].autocrypt_mode = AUTOCRYPT_MODE_NONE;
 
      /* Update the fstab struct */
      fstab->recs = new_fstab_recs;
@@ -836,12 +881,14 @@ int fs_mgr_is_verifyatboot(const struct fstab_rec *fstab)
 
 int fs_mgr_is_encryptable(const struct fstab_rec *fstab)
 {
-    return fstab->fs_mgr_flags & (MF_CRYPT | MF_FORCECRYPT | MF_FORCEFDEORFBE);
+    return fstab->fs_mgr_flags &
+            (MF_CRYPT | MF_FORCECRYPT | MF_FORCEFDEORFBE | MF_AUTODETECTCRYPT);
 }
 
 int fs_mgr_is_file_encrypted(const struct fstab_rec *fstab)
 {
-    return fstab->fs_mgr_flags & MF_FILEENCRYPTION;
+    return fstab->fs_mgr_flags & MF_FILEENCRYPTION ||
+            fstab->autocrypt_mode == AUTOCRYPT_MODE_FBE;
 }
 
 void fs_mgr_get_file_encryption_modes(const struct fstab_rec *fstab,
