@@ -254,13 +254,7 @@ static int do_mkdir(const std::vector<std::string>& args) {
     }
 
     if (e4crypt_is_native()) {
-        if (e4crypt_set_directory_policy(args[1].c_str())) {
-            const std::vector<std::string> options = {
-                "--prompt_and_wipe_data",
-                "--reason=set_policy_failed:"s + args[1]};
-            reboot_into_recovery(options);
-            return -1;
-        }
+        e4crypt_set_directory_policy(args[1].c_str());
     }
     return 0;
 }
