@@ -354,10 +354,10 @@ static int parse_flags(char *flags, struct flag_list *fl,
                     char expected_magic[] = "\xD0\xB5\xB1\xC4";
                     bool magic_matches = true;
                     for (unsigned long i = 0; i < sizeof(expected_magic); i++) {
-                        if (magic[i] == expected_magic[i] ||
-                            magic[sizeof(expected_magic) - 2 - i] == expected_magic[i]) {
-                        } else {
+                        if (!(magic[i] == expected_magic[i] ||
+                                magic[sizeof(expected_magic) - 2 - i] == expected_magic[i])) {
                             magic_matches = false;
+                            break;
                         }
                     }
                     // "\xD0\xB5\xB1\xC4"
