@@ -19,6 +19,9 @@
 #include <cutils/klog.h>
 
 #include "healthd_draw.h"
+#include <healthd/healthd.h>
+
+using namespace android;
 
 #define LOGE(x...) KLOG_ERROR("charger", x);
 #define LOGV(x...) KLOG_DEBUG("charger", x);
@@ -47,14 +50,14 @@ HealthdDraw::HealthdDraw(animation* anim)
 
 HealthdDraw::~HealthdDraw() {}
 
-void HealthdDraw::redraw_screen(const animation* batt_anim, GRSurface* surf_unknown) {
+void HealthdDraw::redraw_screen(const animation* batt_anim, GRSurface* surf_unknown, struct android::BatteryProperties* batt_prop) {
   clear_screen();
 
   /* try to display *something* */
   if (batt_anim->cur_level < 0 || batt_anim->num_frames == 0)
     draw_unknown(surf_unknown);
   else
-    draw_battery(batt_anim);
+    draw_battery(batt_anim, batt_prop);
   gr_flip();
 }
 
@@ -171,7 +174,7 @@ void HealthdDraw::draw_percent(const animation* anim) {
   draw_text(field.font, x, y, str.c_str());
 }
 
-void HealthdDraw::draw_battery(const animation* anim) {
+void HealthdDraw::draw_battery(const animation* anim, struct android::BatteryProperties* batt_prop) {
   const animation::frame& frame = anim->frames[anim->cur_frame];
 
   if (anim->num_frames != 0) {

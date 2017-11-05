@@ -455,7 +455,7 @@ static void update_screen_state(charger* charger, int64_t now) {
     }
 
     /* draw the new frame (@ cur_frame) */
-    healthd_draw->redraw_screen(charger->batt_anim, charger->surf_unknown);
+    healthd_draw->redraw_screen(charger->batt_anim, charger->surf_unknown, batt_prop);
 
     /* if we don't have anim frames, we only have one image, so just bump
      * the cycle counter and exit
@@ -571,9 +571,7 @@ static void process_key(charger* charger, int code, int64_t now) {
                 set_next_key_check(charger, key, POWER_ON_KEY_TIME);
             }
         } else {
-            /* if the power key got released, force screen state cycle */
             if (key->pending) {
-                kick_animation(charger->batt_anim);
                 /* If key is pressed when the animation is not running, kick
                  * the animation and quite suspend; If key is pressed when
                  * the animation is running, turn off the animation and request
