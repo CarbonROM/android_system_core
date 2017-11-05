@@ -22,6 +22,8 @@
 
 #include "animation.h"
 
+#include <batteryservice/BatteryService.h>
+
 using namespace android;
 
 class HealthdDraw {
@@ -31,7 +33,7 @@ class HealthdDraw {
   virtual ~HealthdDraw();
 
   // Redraws screen.
-  void redraw_screen(const animation* batt_anim, GRSurface* surf_unknown);
+  void redraw_screen(const animation* batt_anim, GRSurface* surf_unknown, struct android::BatteryProperties* batt_prop);
 
   // Blanks screen if true, unblanks if false.
   virtual void blank_screen(bool blank);
@@ -50,7 +52,7 @@ class HealthdDraw {
                             const int length, int* x, int* y);
 
   // Draws battery animation, if it exists.
-  virtual void draw_battery(const animation* anim);
+  virtual void draw_battery(const animation* anim, struct android::BatteryProperties* batt_prop);
   // Draws clock text, if animation contains text_field data.
   virtual void draw_clock(const animation* anim);
   // Draws battery percentage text if animation contains text_field data.
