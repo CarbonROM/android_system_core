@@ -738,6 +738,7 @@ void load_system_props() {
     load_properties_from_file("/odm/build.prop", NULL);
     load_properties_from_file("/vendor/build.prop", NULL);
     load_properties_from_file("/factory/factory.prop", "ro.*");
+    load_properties_from_file("/system/build.prop", "ro.control_privapp_permissions");
 
     /* update with vendor-specific property runtime
      * overrides
