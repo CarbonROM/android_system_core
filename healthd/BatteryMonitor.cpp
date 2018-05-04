@@ -275,6 +275,12 @@ bool BatteryMonitor::update(void) {
                               mChargerNames[i].string());
             int ChargingCurrent =
                     (access(path.string(), R_OK) == 0) ? getIntField(path) : 0;
+                    
+#ifdef HEALTHD_ENABLE_HUAWEI_FASTCHG_CHECK
+            if (ChargingCurrent == 0) {
+                ChargingCurrent = getHuaweiFastCurrent(ChargingCurrent);
+            }
+#endif
 
             path.clear();
             path.appendFormat("%s/%s/voltage_max", POWER_SUPPLY_SYSFS_PATH,
@@ -662,5 +668,34 @@ void BatteryMonitor::init(struct healthd_config *hc) {
         mBatteryFixedTemperature = FAKE_BATTERY_TEMPERATURE;
     }
 }
+
+
+#ifdef HEALTHD_ENABLE_HUAWEI_FASTCHG_CHECK
+bool BatteryMonitor::isHuaweiFastCharge() {
+    String8 fcpPath;
+    String8 scpPath;
+    fcpPath.appendFormat("%s/Battery/fcp_status", POWER_SUPPLY_SYSFS_PATH);
+    scpPath.appendFormat("%s/Battery/scp_status", POWER_SUPPLY_SYSFS_PATH);
+    int fcpFastChgValue = (access(fcpPath.string(), R_OK) == 0) ? getIntField(fcpPath) : 0;
+    int scpFastChgValue = (access(scpPath.string(), R_OK) == 0) ? getIntField(scpPath) : 0;
+    return fcpFastChgValue != 0 || scpFastChgValue != 0;
+}
+
+int BatteryMonitor::getHuaweiFastCurrent(int ChargingCurrent) {
+    KLOG_WARNING(LOG_TAG, "getHuaweiFastCurrent active = %d ac = %d usb = %d\n", isHuaweiFastCharge(), props.chargerAcOnline, props.chargerUsbOnline);
+    if (props.chargerAcOnline) {
+        if (isHuaweiFastCharge()) {
+            return 1800000;
+        } else {
+            return 1500000;
+        }
+    } else {
+        if (props.chargerUsbOnline) {
+            return 500000;
+        }
+    }
+    return ChargingCurrent;
+}
+#endif
 
 }; // namespace android
