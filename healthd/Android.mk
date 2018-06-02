@@ -3,6 +3,9 @@
 LOCAL_PATH := $(call my-dir)
 
 include $(CLEAR_VARS)
+ifeq ($(strip $(BOARD_BATTERY_REAL_INFO)),true)
+LOCAL_CFLAGS += -DBATTERY_REAL_INFO
+endif
 LOCAL_SRC_FILES := BatteryMonitor.cpp
 LOCAL_MODULE := libbatterymonitor
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/include
