@@ -205,7 +205,7 @@ asocket* host_service_to_socket(std::string_view name, std::string_view serial,
         return create_device_tracker(false);
     } else if (name == "track-devices-l") {
         return create_device_tracker(true);
-    } else if (ConsumePrefix(&name, "wait-for-")) {
+    } else if (android::base::ConsumePrefix(&name, "wait-for-")) {
         std::shared_ptr<state_info> sinfo = std::make_shared<state_info>();
         if (sinfo == nullptr) {
             fprintf(stderr, "couldn't allocate state_info: %s", strerror(errno));
@@ -215,11 +215,11 @@ asocket* host_service_to_socket(std::string_view name, std::string_view serial,
         sinfo->serial = serial;
         sinfo->transport_id = transport_id;
 
-        if (ConsumePrefix(&name, "local")) {
+        if (android::base::ConsumePrefix(&name, "local")) {
             sinfo->transport_type = kTransportLocal;
-        } else if (ConsumePrefix(&name, "usb")) {
+        } else if (android::base::ConsumePrefix(&name, "usb")) {
             sinfo->transport_type = kTransportUsb;
-        } else if (ConsumePrefix(&name, "any")) {
+        } else if (android::base::ConsumePrefix(&name, "any")) {
             sinfo->transport_type = kTransportAny;
         } else {
             return nullptr;
@@ -249,7 +249,7 @@ asocket* host_service_to_socket(std::string_view name, std::string_view serial,
             wait_for_state(fd, sinfo.get());
         });
         return create_local_socket(std::move(fd));
-    } else if (ConsumePrefix(&name, "connect:")) {
+    } else if (android::base::ConsumePrefix(&name, "connect:")) {
         std::string host(name);
         unique_fd fd = create_service_thread(
                 "connect", std::bind(connect_service, std::placeholders::_1, host));
