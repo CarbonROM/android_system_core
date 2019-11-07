@@ -71,6 +71,7 @@
 #include "selinux.h"
 #include "service.h"
 #include "subcontext.h"
+#include "vendor_init.h"
 #include "util.h"
 
 using namespace std::literals::string_literals;
@@ -1050,6 +1051,7 @@ static Result<Success> do_loglevel(const BuiltinArguments& args) {
 
 static Result<Success> do_load_persist_props(const BuiltinArguments& args) {
     load_persist_props();
+    vendor_load_persist_properties();
     return Success();
 }
 
