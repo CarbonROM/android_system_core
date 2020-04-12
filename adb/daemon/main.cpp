@@ -219,6 +219,11 @@ int adbd_main(int server_port) {
     }
 #endif
 
+#if defined(__ANDROID_RECOVERY__)
+    auth_required = auth_required &&
+                    android::base::GetBoolProperty("ro.adb.secure.recovery", true);
+#endif
+
     // Our external storage path may be different than apps, since
     // we aren't able to bind mount after dropping root.
     const char* adb_external_storage = getenv("ADB_EXTERNAL_STORAGE");
