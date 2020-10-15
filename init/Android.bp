@@ -65,14 +65,19 @@ init_device_sources = [
     "ueventd.cpp",
     "ueventd_parser.cpp",
 ]
-init_vendor_sources = [
-    "vendor_init.cpp",
-]
 init_host_sources = [
     "check_builtins.cpp",
     "host_import_parser.cpp",
     "host_init_verifier.cpp",
 ]
+
+cc_library_static {
+    name: "vendor_init",
+    recovery_available: true,
+    srcs: [
+        "vendor_init.cpp",
+    ],
+}
 
 cc_defaults {
     name: "init_defaults",
@@ -164,8 +169,9 @@ cc_library_static {
     defaults: [
         "init_defaults",
         "selinux_policy_version",
+        "vendor_init_defaults",
     ],
-    srcs: init_common_sources + init_device_sources + init_vendor_sources,
+    srcs: init_common_sources + init_device_sources,
     whole_static_libs: [
         "libcap",
         "com.android.sysprop.apex",
@@ -184,14 +190,6 @@ cc_library_static {
                 "libbinder",
                 "libutils",
             ],
-        },
-    },
-
-    product_variables: {
-        carbon: {
-            target_init_vendor_lib: {
-                whole_static_libs: ["%s"],
-            },
         },
     },
 }
