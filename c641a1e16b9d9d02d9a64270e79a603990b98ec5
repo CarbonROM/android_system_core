@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "7b48d7f9_f0d9119b",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 273
+      },
+      "writtenOn": "2021-07-23T20:54:22Z",
+      "side": 1,
+      "message": "It\u0027s firgotten commit for LockscreenCharging.\nNow LockscreenCharging is worked.",
+      "revId": "c641a1e16b9d9d02d9a64270e79a603990b98ec5",
+      "serverId": "4c0b52a2-b090-4331-a190-b288d812d081"
+    }
+  ]
+}
